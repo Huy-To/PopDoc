@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #define buff_size 256
@@ -60,11 +61,11 @@ void swap(HuffNode **address1, HuffNode **address2) {
   *address2 = temp;
 }
 /*===================================================*/
-// Function to moveDown the node if parent(min_n + min_(n+1) >= children
+// Function to moveDown the node if parent >= children
 // (frequency)
 /*===================================================*/
 void moveDown(HuffNode *nodeList[], int size, int i) {
-  while (sizeof(*nodeList) != 0) {
+  while (1) {
     int index = i;
     int left = 2 * i + 1; // Because root is already at 0
     int right = 2 * i + 2;
@@ -98,15 +99,15 @@ void moveUp(HuffNode *nodeList[], int i) {
   }
 }
 /*===================================================*/
-// Function to build heap && sort them
+// Function to build heap
 /*===================================================*/
 void buildHeap(HuffNode *nodeList[], int size) {
-  for (int i = size / 2; i >= 0; i--) {
+  for (int i = size / 2 - 1; i >= 0; i--) {
     moveDown(nodeList, size, i);
   }
 }
 /*===================================================*/
-// Function to insert node into the tree and
+// Function to insert node into heap
 /*===================================================*/
 void insertNode(HuffNode *nodeList[], int *size, HuffNode *node) {
   nodeList[*size] = node;
@@ -149,37 +150,52 @@ HuffNode *Tree(HuffNode *nodeList[], int size) {
 // left = 0
 // right =  1
 /*===================================================*/
-void vroomVroom(HuffNode *root) {
-  HuffNode *parent = root;
-  while (parent = !NULL) {
-    if (parent->left = !NULL) {
-      vroomVroom(parent->left);
-    }
-    if (parent->right = !NULL) {
-      vroomVroom(parent->right);
-    }
+void vroomVroom01(HuffNode *root, char ch[], int nodeIndex, char *binaries[]) {
+  if (root == NULL) {
+    return;
   }
+  if (root->left == NULL && root->right == NULL) {
+    ch[nodeIndex] = '\0'; // EOF
+    binaries[root->c] = strdup(ch);
+    return;
+  }
+
+  ch[nodeIndex] = '0';
+  vroomVroom01(root->left, ch, nodeIndex + 1, binaries);
+
+  ch[nodeIndex] = '1';
+  vroomVroom01(root->right, ch, nodeIndex + 1, binaries);
+}
+
+void vroomVroomFree(HuffNode *root) {
+  if (root == NULL) {
+    return;
+  }
+  vroomVroomFree(root->left);
+  vroomVroomFree(root->right);
+  free(root);
 }
 
 /*Maybe should be used for options */
 int main(int argc, char **argv) {
+  char *inputFile = "completeShakespeare.txt";
+  char *outputFile = "huffshake.out";
 
   int input;
   while ((input = getopt(argc, argv, "i:o:")) != -1) {
     switch (input) {
     case 'i':
-      fileName = "completeShakespeare.txt";
-      case 'o';
-        fileName = "huffshake.out";
+      inputFile = optarg;
+      break;
+    case 'o':
+      outputFile = optarg;
+      break;
     }
   }
 
-
-
   unsigned int frequency[buff_size] = {0}; // Allocating Memory
-  int index = 0;
   int c;
-  FILE *fileOpened = fopen("completeShakespeare.txt", "r");
+  FILE *fileOpened = fopen(inputFile, "r");
   if (fileOpened == NULL) {
     fprintf(stderr, "Could not open file\n");
     exit(EXIT_FAILURE);
@@ -194,13 +210,29 @@ int main(int argc, char **argv) {
 
   HuffNode *list[buff_size];
   int count = buildNodeList(frequency, list);
-  HuffNode *root = Tree(list, count);
-  return 0;
   if (count == 0) {
     fprintf(stderr, "Bruh, its empty\n");
     return 0;
   }
-  // Create Node if empty, else add node
-  // sort throught the node
-  //
+
+  HuffNode *root = Tree(list, count);
+  if (root == NULL) {
+    return 0;
+  }
+
+  char ch[buff_size];
+  char *binaries[buff_size] = {0};
+  vroomVroom01(root, ch, 0, binaries);
+
+  /* Free MEMORY */
+  vroomVroomFree(root);
+  // Freeing compressed code
+  for (int i = 0; i < buff_size; i++) {
+    free(binaries[i]);
+  }
+  return 0;
+
+  // outputFile
+  // binaries
+  // inputFile
 }
